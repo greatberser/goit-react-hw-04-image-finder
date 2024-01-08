@@ -1,33 +1,31 @@
-import { Component } from "react";
+import React, { useEffect, useCallback } from "react";
 import disableScroll from 'disable-scroll';
 
-export class Modal extends Component {
-  handleCloseModal = (evt) => {
+export const Modal = ({ imgSrc, imgAlt, onCloseModal }) => {
+  const handleCloseModal = useCallback((evt) => {
     if (evt.code === "Escape" || evt.target === evt.currentTarget) {
-      const { onCloseModal } = this.props;
       onCloseModal(); 
     }
-  };
+  }, [onCloseModal]);
 
-  componentDidMount() {
-    window.addEventListener("keydown", this.handleCloseModal);
+  useEffect(() => {
+    const handleKeyDown = (evt) => handleCloseModal(evt);
+    window.addEventListener("keydown", handleKeyDown);
     disableScroll.on();
-  }
 
-  componentWillUnmount() {
-    window.removeEventListener("keydown", this.handleCloseModal);
-    disableScroll.off();
-  }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      disableScroll.off();
+    };
+  }, [handleCloseModal]);
 
-  render() {
-    const { imgSrc, imgAlt } = this.props;
-
-    return (
-      <div className="Overlay" onClick={this.handleCloseModal}>
-        <div className="Modal">
-          <img src={imgSrc} alt={imgAlt} />
-        </div>
+  return (
+    <div className="Overlay" onClick={handleCloseModal}>
+      <div className="Modal">
+        <img src={imgSrc} alt={imgAlt} />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default Modal;
