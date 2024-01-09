@@ -1,26 +1,33 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import disableScroll from 'disable-scroll';
 
 export const Modal = ({ imgSrc, imgAlt, onCloseModal }) => {
-  const handleCloseModal = useCallback((evt) => {
-    if (evt.code === "Escape" || evt.target === evt.currentTarget) {
-      onCloseModal(); 
-    }
-  }, [onCloseModal]);
-
   useEffect(() => {
-    const handleKeyDown = (evt) => handleCloseModal(evt);
+    const handleKeyDown = (evt) => {
+      if (evt.code === "Escape") {
+        onCloseModal(); 
+      }
+    };
+
+    const handleClickOutside = (evt) => {
+      if (evt.target === evt.currentTarget) {
+        onCloseModal(); 
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("click", handleClickOutside);
     disableScroll.on();
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("click", handleClickOutside);
       disableScroll.off();
     };
-  }, [handleCloseModal]);
+  }, [onCloseModal]);
 
   return (
-    <div className="Overlay" onClick={handleCloseModal}>
+    <div className="Overlay" onClick={onCloseModal}>
       <div className="Modal">
         <img src={imgSrc} alt={imgAlt} />
       </div>

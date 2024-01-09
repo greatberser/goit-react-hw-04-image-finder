@@ -3,8 +3,8 @@ import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
+import { Loader } from './Loader/Loader'
 import { ToastContainer, toast } from 'react-toastify';
-import { Rings } from 'react-loader-spinner';
 import * as ImageStorage from './API/api';
 
 export const App = () => {
@@ -91,37 +91,11 @@ export const App = () => {
           onChangeStatus={setStatus}
         />
       )}
-      {page > 1 && <Button loadMore={loadMoreImages} />}
-      {showModal && (
-        <Modal
-          imgSrc={largeImageURL}
-          imgAlt={tags}
-          onCloseModal={handleCloseModal}
-        />
-      )}
       {error && <p className="textEmpty">Sorry. {error}</p>}
       {isEmpty && (
         <p className="textEmpty">Sorry. There are no images...</p>
       )}
-      {status === 'loading' && (
-        <Rings
-          visible={true}
-          height="80"
-          width="80"
-          color="#4fa94d"
-          ariaLabel="rings-loading"
-          wrapperStyle={{
-            top: '50%',
-            left: '50%',
-            opacity: '0.5',
-            height: '200px',
-            width: '200px',
-            position: 'fixed',
-            zIndex: '99',
-          }}
-          wrapperClass=""
-        />
-      )}
+      {status === 'loading' && <Loader />}
       <ToastContainer autoClose={2000} hideProgressBar={true} theme="light" />
     </div>
   );
