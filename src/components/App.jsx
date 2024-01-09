@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
@@ -7,130 +7,124 @@ import { ToastContainer, toast } from 'react-toastify';
 import { Rings } from 'react-loader-spinner';
 import * as ImageStorage from './API/api';
 
-export class App extends Component {
-  state = {
-    status: 'idle',
-    error: null,
-    images: [],
-    webformatURL: '',
-    largeImageURL: '',
-    tags: '',
-    page: 1,
-    query: '',
-    showModal: false,
-    isEmpty: false,
-  };
+export const App = () => {
+  const [status, setStatus] = useState('idle');
+  const [error, setError] = useState(null);
+  const [images, setImages] = useState([]);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [tags, setTags] = useState('');
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoadMore, setIsLoadMore] = useState(false);
 
-  async componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) {
+
+  useEffect(() => {
+    if (query !== '') {
+      fetchImage();
+    }
+
+    async function fetchImage() {
       try {
         const { hits, totalHits } = await ImageStorage.getImages(query, page);
 
         if (hits.length === 0) {
-          this.setState({ isEmpty: true });
+          setIsEmpty(true);
           return;
         }
-        if (hits.length < 40) {
+        if (hits.length < 12) {
           toast.success(
             "We're sorry, but you've reached the end of search results."
           );
         }
-        this.setState(prevState => ({
-          status: 'loading',
-          images: [...prevState.images, ...hits],
-          isLoadMore: page < Math.ceil(totalHits / 40),
-        }));
+
+        setStatus('loading');
+        setImages(prevState => [...prevState, ...hits]);
+        setIsLoadMore(page < Math.ceil(totalHits / 40));
       } catch (error) {
-        this.setState({ error: error.message });
+        setError(error.message);
       } finally {
-        this.setState({ status: 'idle' });
+        setStatus('idle');
       }
     }
-  }
+  }, [query, page]);
 
 
-  loadMoreImages = () => {
-    this.setState(prevState => {
-      return {
-        status: 'loading',
-        page: prevState.page + 1,
-      };
-    });
+  const loadMoreImages = () => {
+    setPage(prevPage => prevPage + 1);
+    setStatus('loading');
   };
 
-  handleSerch = query => {
-    this.setState({
-      query,
-      page: 1,
-      images: [],
-      isLoadMore: false,
-      isEmpty: false,
-      status: 'loading',
-    });
+  const handleSearch = newQuery => {
+    setQuery(newQuery);
+    setPage(1);
+    setImages([]);
+    setIsEmpty(false);
+    setStatus('loading');
   };
 
-
-  handlerModal = (largeImageURL, tags) => {
-    this.setState({largeImageURL, tags, showModal: true});
+  const handleModal = (url, imageTags) => {
+    setLargeImageURL(url);
+    setTags(imageTags);
+    setShowModal(true);
   };
 
-  handleCloseModal = () => {
-    this.setState(prevState => {
-      return {
-        showModal: !prevState.showModal,
-        largeImageURL: '',
-        status: 'idle',
-      };
-    });
+  const handleCloseModal = () => {
+    setShowModal(prevShowModal => !prevShowModal);
+    setLargeImageURL('');
+    setStatus('idle');
   };
 
-  render() {
-    const { images, isLoadMore, showModal, isEmpty, error, status } =
-      this.state;
-
-    return (
-      <div className="App">
-        <Searchbar handleSerch={this.handleSerch} />
-        {images.length > 0 && (
-          <ImageGallery
-            images={this.state.images}
-            onModal={this.handlerModal}
-          />
-        )}
-        {isLoadMore && <Button loadMore={this.loadMoreImages} />}
-        {showModal && (
-          <Modal
-            imgSrc={this.state.largeImageURL}
-            imgAlt={this.state.tags}
-            onCloseModal={this.handleCloseModal}
-          />
-        )}
-        {error && <p className="textEmpty">Sorry. {error}</p>}
-        {isEmpty && (
-          <p className="textEmpty">Sorry. There are no images...</p>
-        )}
-        {status === 'loading' && (
-          <Rings
+  return (
+    <div className="App">
+      <Searchbar handleSearch={handleSearch} />
+      {images.length > 0 && (
+        <ImageGallery images={images} onModal={handleModal} />
+      )}
+      {isLoadMore && <Button loadMore={loadMoreImages} />}
+      {showModal && (
+        <Modal
+          imgSrc={largeImageURL}
+          imgAlt={tags}
+          onCloseModal={handleCloseModal}
+          onChangeStatus={setStatus}
+        />
+      )}
+      {page > 1 && <Button loadMore={loadMoreImages} />}
+      {showModal && (
+        <Modal
+          imgSrc={largeImageURL}
+          imgAlt={tags}
+          onCloseModal={handleCloseModal}
+        />
+      )}
+      {error && <p className="textEmpty">Sorry. {error}</p>}
+      {isEmpty && (
+        <p className="textEmpty">Sorry. There are no images...</p>
+      )}
+      {status === 'loading' && (
+        <Rings
           visible={true}
           height="80"
           width="80"
           color="#4fa94d"
           ariaLabel="rings-loading"
           wrapperStyle={{
-              top: '50%',
-              left: '50%',
-              opacity: '0.5',
-              height: '200px',
-              width: '200px',
-              position: 'fixed',
-              zIndex: '99',
+            top: '50%',
+            left: '50%',
+            opacity: '0.5',
+            height: '200px',
+            width: '200px',
+            position: 'fixed',
+            zIndex: '99',
           }}
           wrapperClass=""
-          />
-        )}
-        <ToastContainer autoClose={2000} hideProgressBar={true} theme="light" />
-      </div>
-    );
-  }
-}
+        />
+      )}
+      <ToastContainer autoClose={2000} hideProgressBar={true} theme="light" />
+    </div>
+  );
+};
+
+export default App;

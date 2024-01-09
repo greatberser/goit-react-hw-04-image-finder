@@ -1,49 +1,46 @@
-import { Component } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export class Searchbar extends Component {
-  state = {
-    query: '',
+export const Searchbar = ({ handleSearch }) => {
+  const [query, setQuery] = useState('');
+
+  const handleChange = ({ target: { name, value } }) => {
+    setQuery(value);
   };
 
-  handleChange = ({ target: { name, value } }) => {
-    this.setState({ [name]: value });
-  };
-
-  onSubmit = event => {
+  const onSubmit = event => {
     event.preventDefault();
-    if (this.state.query.trim() === '') {
-      toast('Input serch query!');
+    if (query.trim() === '') {
+      toast('Input search query!');
       return;
     }
-    const { handleSerch } = this.props;
-    handleSerch(this.state.query);
-    this.setState({ query: '' });
+    handleSearch(query);
+    setQuery('');
   };
 
-  render() {
-    return (
-      <div>
-        <header className="Searchbar">
-          <form className="SearchForm" onSubmit={this.onSubmit}>
-            <button type="submit" className="SearchForm-button">
-              Search
-            </button>
+  return (
+    <div>
+      <header className="Searchbar">
+        <form className="SearchForm" onSubmit={onSubmit}>
+          <button type="submit" className="SearchForm-button">
+            Search
+          </button>
 
-            <input
-              className="SearchForm-input"
-              type="text"
-              autoComplete="off"
-              autoFocus
-              name="query"
-              value={this.state.query}
-              onChange={this.handleChange}
-              placeholder="Search images and photos"
-            />
-          </form>
-        </header>
-      </div>
-    );
-  }
-}
+          <input
+            className="SearchForm-input"
+            type="text"
+            autoComplete="off"
+            autoFocus
+            name="query"
+            value={query}
+            onChange={handleChange}
+            placeholder="Search images and photos"
+          />
+        </form>
+      </header>
+    </div>
+  );
+};
+
+export default Searchbar;
